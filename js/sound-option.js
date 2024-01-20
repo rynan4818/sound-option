@@ -31,6 +31,8 @@ const sound_noteCut     = '';
 let sound_menu_flag = true;
 let sound_combo_audio = {};
 let sound_combo_list = [];
+let sound_full_combo_flag = true;
+let before_combo = 0;
 for (let combo in sound_combo) {
   if (sound_combo[combo].trim() !== '') {
     sound_combo_audio[combo] = new Howl({src: [sound_combo[combo].trim()]});
@@ -102,12 +104,14 @@ if (sound_noteCut.trim() !== '') {
 
 ex_hello.push((data) => {
   if (data.status.beatmap && data.status.performance) {
+	  before_combo = 0;
     sound_combo_remaining = sound_combo_list.concat();
     sound_combo_remaining.forEach((combo, index) => {
       if (data.status.performance.combo >= combo) {
         sound_combo_remaining.shift();
       }
     });
+    sound_full_combo_flag = true;
     sound_menu_flag = false;
   } else {
     sound_menu_flag = true;
@@ -130,11 +134,13 @@ ex_songStart.push((data) => {
       sound_songStart_audio.play();
     }
   }
+	before_combo = 0;
+  sound_full_combo_flag = true;
   sound_menu_flag = false;
 });
 
 ex_finished.push((data) => {
-  if (data.status.performance.passedNotes === data.status.performance.combo) {
+  if (sound_full_combo_flag && data.status.performance.passedNotes === data.status.performance.combo) {
     if (sound_full_combo.trim() !== '') {
       sound_full_combo_audio.play();
     }
@@ -164,24 +170,24 @@ ex_resume.push((data) => {
 });
 
 ex_obstacleEnter.push((data) => {
-  sound_combo_remaining = sound_combo_list.concat();
   if (sound_obstacle.trim() !== '') {
     sound_obstacle_audio.play();
   }
+  sound_full_combo_flag = false;
 });
 
 ex_noteMissed.push((data) => {
-  sound_combo_remaining = sound_combo_list.concat();
   if (sound_noteMissed.trim() !== '') {
     sound_noteMissed_audio.play();
   }
+  sound_full_combo_flag = false;
 });
 
 ex_bombCut.push((data) => {
-  sound_combo_remaining = sound_combo_list.concat();
   if (sound_bombCut.trim() !== '') {
     sound_bombCut_audio.play();
   }
+  sound_full_combo_flag = false;
 });
 
 ex_softFailed.push((data) => {
@@ -191,7 +197,11 @@ ex_softFailed.push((data) => {
 });
 
 ex_performance.push((data) => {
-  if (data.status.performance.combo === sound_combo_remaining[0]) {
+	if (before_combo > data.status.performance.combo) {
+		sound_combo_remaining = sound_combo_list.concat();
+	}
+	before_combo = data.status.performance.combo;
+  if (data.status.performance.combo >= sound_combo_remaining[0]) {
     sound_combo_audio[sound_combo_remaining[0]].play();
     sound_combo_remaining.shift();
   }
