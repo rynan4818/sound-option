@@ -1,4 +1,4 @@
-//howler.js
+//howler.jsライブラリの読み込みが必要です
 //https://howlerjs.com/
 //<script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.1/howler.js"></script>
 
